@@ -710,9 +710,14 @@ class GRPOTrainer(Trainer):
         loss = ((per_token_loss * completion_mask).sum(dim=1) / completion_mask.sum(dim=1)).mean()
 
         # Log the metrics
-        completion_length = self.accelerator.gather_for_metrics(completion_mask.sum(1)).float().mean().item()
-        self._metrics["completion_length"].append(completion_length)
-
+        completion_length = self.accelerator.gather_for_metrics(completion_mask.sum(1)).float()
+        completion_length_mean = completion_length.mean().item()
+        completion_length_max = completion_length.max().item()
+        completion_length_min = completion_length.min().item()
+        self._metrics["completion_length"].append(completion_length_mean)
+        self._metrics["completion_length_max"].append(completion_length_max)
+        self._metrics["completion_length_min"].append(completion_length_min)
+		
         mean_kl = ((per_token_kl * completion_mask).sum(dim=1) / completion_mask.sum(dim=1)).mean()
         self._metrics["kl"].append(self.accelerator.gather_for_metrics(mean_kl).mean().item())
 
